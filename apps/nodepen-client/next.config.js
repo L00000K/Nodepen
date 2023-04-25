@@ -9,7 +9,7 @@ const nextConfig = {
   },
   images: {
     disableStaticImages: true,
-  }
+  },
 }
 
 module.exports = withImages(nextConfig)
