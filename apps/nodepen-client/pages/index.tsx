@@ -2,6 +2,7 @@ import type { GetStaticProps } from 'next'
 import dynamic from 'next/dynamic'
 import type React from 'react'
 import type * as NodePen from '@nodepen/core'
+import { useEffect, useState } from 'react'
 
 const NodesAppContainer = dynamic(import('../components/NodesAppContainer'), { ssr: false })
 
@@ -10,7 +11,17 @@ type PageProps = {
   templates: NodePen.NodeTemplate[]
 }
 
-const Page = ({ document, templates }: PageProps): React.ReactElement => {
+const Page = ({ document }: PageProps): React.ReactElement => {
+  const [templates, setTemplates] = useState<NodePen.NodeTemplate[]>([])
+
+  useEffect(() => {
+    fetch('/api/gh')
+      .then((res) => res.json())
+      .then((data) => {
+        setTemplates(data)
+      })
+  }, [])
+
   return (
     <div className="w-vw h-vh flex justify-center items-center">
       <div className="relative" style={{ width: 1000, height: 750, overflow: 'visible' }}>
@@ -99,19 +110,10 @@ export const getStaticProps: GetStaticProps<PageProps> = async () => {
 
   const document = await fetchDocument('test-id')
 
-  const fetchTemplates = async (): Promise<NodePen.NodeTemplate[]> => {
-    const response = await fetch('http://localhost:6500/grasshopper', { cache: 'no-store' })
-    const templates = await response.json()
-
-    return templates
-  }
-
-  const templates = await fetchTemplates()
-
   return {
     props: {
       document,
-      templates,
+      templates: [],
     },
     revalidate: 600,
   }

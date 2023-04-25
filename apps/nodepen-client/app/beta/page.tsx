@@ -31,10 +31,10 @@ const fetchDocument = async (id: string): Promise<NodePen.Document> => {
 }
 
 const fetchTemplates = async (): Promise<NodePen.NodeTemplate[]> => {
-  const response = await fetch('http://localhost:6500/grasshopper', { cache: 'no-store' })
-  const templates = await response.json()
+  // const response = await fetch('http://localhost:6500/grasshopper', { cache: 'no-store' })
+  // const templates = await response.json()
 
-  return templates
+  return []
 }
 
 export default RootPage
