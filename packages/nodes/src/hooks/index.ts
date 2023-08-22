@@ -1,3 +1,5 @@
+export { useAsyncMemo } from './useAsyncMemo'
+export { useDocumentRef } from './useDocumentRef'
 export { useImperativeEvent } from './useImperativeEvent'
 export { useLongHover } from './useLongHover'
 export { useNodeAnchorPosition } from './useNodeAnchorPosition'

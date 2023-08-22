@@ -1,13 +1,11 @@
 <img src="np-banner.png" >
 
 <div>
-<img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/NodePenIO?style=social">
-<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/nodepen/nodes?style=social">
-&nbsp;
+<img alt="npm (scoped)" src="https://img.shields.io/npm/v/%40nodepen/nodes?style=flat-square&color=%2398E2C6">
 <img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/nodepen/nodes/ci-nodes.yml?label=nodes&style=flat-square">
 <img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/nodepen/nodes/ci-converters.yml?label=converters&style=flat-square">
-<!-- <img alt="npm (scoped)" src="https://img.shields.io/npm/v/@nodepen/nodes?style=flat-square"> -->
 <img alt="GitHub" src="https://img.shields.io/github/license/nodepen/nodes?style=flat-square">
+<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/nodepen/nodes?style=social">
 </div>
 <br />
 
@@ -56,10 +54,6 @@ A thin next.js client that communicates directly with the Rhino Compute server f
 
 A minimal Rhino Compute server with endpoints for updating a given NodePen document. Writes results directly to the local Speckle server instance it's configured to point to.
 
-#### speckle-server
-
-A git submodule of [specklesystems/speckle-server](https://github.com/specklesystems/speckle-server).
-
 ## Local Development
 
 Running NodePen locally requires a number of dependencies and, at the moment, a bit of manual work for first-time setup. Please also see the section below about known limitations.
@@ -71,15 +65,15 @@ In order to run all of the example applications, you will need:
 - Git with SSH auth
 - Nodejs 16, 18
 - Dotnet CLI
-- Docker and docker-compose
 - Rhino 7+
+- Access to a running Speckle Server
 
 ### Initial Setup
 
-Clone this repo and its speckle-server submodule with:
+Clone this repo:
 
 ```
-git clone --recurse-submodules git@github.com:nodepen/nodes.git
+git clone git@github.com:nodepen/nodes.git
 ```
 
 From the root directory, run:
@@ -89,7 +83,7 @@ npm i
 npm run build
 ```
 
-This should install dependencies for all of the javascript projects and build them once. Build failures may occur for the last project, `nodepen-client`, and can be ignored.
+This should install dependencies for all of the javascript projects and build them once. Build failures may still occur for the last project, `nodepen-client`, and can be ignored.
 
 From `/apps/rhino-compute-server` run:
 
@@ -107,17 +101,17 @@ Visit your local Speckle server and:
 - Create a new stream
 - [Create a personal access token for your account](https://speckle.guide/dev/tokens.html).
 
+Alternatively, you may also source these values from a live Speckle server you have access to.
+
 In `apps/nodepen-client`, copy `.env.development` to a `.env.development.local` and populate each environment variable with the relevant information from the previous steps.
 
-In `apps/rhino-compute-server`, modify the values at the top of `Endpoints/GrasshopperEndpoints.cs`.
-
-For production systems, it is bad practice (and dangerous) to commit personal access tokens in this way. But so long as its for your locally running and disposable Speckle server, this is acceptable for local NodePen development.
+In `apps/rhino-compute-server`, copy `appsettings.json` to an `appsettings.local.json` and populate the named variables in the same way.
 
 At this point, you may leave your Speckle server running and continue onto the next section.
 
 ### Development Environment
 
-All three services in the `/apps` directory must be running in order to develop with NodePen locally. In general, I recommend letting all three run in their own terminal. In VSCode, you can split terminals to see results from each one at the same time.
+Both services in the `/apps` directory must be running in order to develop with NodePen locally. For all current features, you must also have access to a running speckle server (local or otherwise).
 
 Once all three are successfully running, you can navigate to `http://localhost:4000` to begin working.
 
@@ -149,9 +143,8 @@ Follow Speckle's instructions for local development [here](https://speckle.guide
 
 ### Limitations
 
-- Grasshopper script conversion will fail often because several important component types are not yet handled. You may safely use most default components, but you can't (yet!) use anything with a special type or behavior like the Number Slider or floating parameters.
+- Grasshopper script conversion (upload Grasshopper file => create NodePen doc) will fail often because several important component types are not yet handled. You may safely use most default components, but you can't (yet!) use anything with a special type or behavior like the Number Slider or floating parameters.
 - You may only expose number-based input parameters at this time in the HUD inputs window.
-- Only curve-based results are being pushed to the Speckle server at this time, and so they are the only geometry you can see in the viewer.
 
 ## Attribution
 

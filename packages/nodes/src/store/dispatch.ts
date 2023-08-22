@@ -6,15 +6,32 @@ import { shallow } from 'zustand/shallow'
 import { useStore } from '$'
 import { DIMENSIONS } from '@/constants'
 import { regionContainsRegion, regionIntersectsRegion } from '@/utils/intersection'
-import { getNodeExtents, getNodeWidth, getNodeHeight } from '@/utils/node-dimensions'
+import { getNodeExtents } from '@/utils/node-dimensions'
 import { divideDomain, remap } from '@/utils/numerics'
 import { expireSolution } from './utils'
+import { createInstance } from '@/utils/templates'
 
 const { NODE_INTERNAL_PADDING } = DIMENSIONS
 
 type BaseAction = string | ({ type: string } & Record<string, unknown>)
 type BaseSetter = (callback: (state: NodesAppState) => void, replace?: boolean, action?: BaseAction) => void
 type BaseGetter = () => NodesAppState
+
+// export type NodesAppDispatch = {
+//   dispatch: {
+//     apply(callback: (state: NodesAppState, get: BaseGetter) => void): void
+//     loadDocument(document: NodePen.Document): void
+//     loadTemplates(templates: NodePen.NodeTemplate[]): void
+//     commitRegionSelection: (selectionMode: 'set' | 'add' | 'remove') => void
+//     commitLiveWireEdit: () => void
+//     setCameraAspect: (aspect: number) => void
+//     setCameraPosition: (x: number, y: number) => void
+//     setCameraZoom: (zoom: number) => void
+//     setNodePosition: (id: string, x: number, y: number) => void
+//     clearInterface: () => void
+//     clearSelection: () => void
+//   }
+// }
 
 export type NodesAppDispatch = ReturnType<typeof createDispatch>
 
@@ -29,7 +46,7 @@ export const createDispatch = (set: BaseSetter, get: BaseGetter) => {
 
         for (const node of Object.values(document.nodes)) {
           // Sanitize node properties
-          const { instanceId, templateId, inputs, outputs } = node
+          const { instanceId, templateId } = node
 
           const template = state.templates[templateId]
 
@@ -37,51 +54,54 @@ export const createDispatch = (set: BaseSetter, get: BaseGetter) => {
             console.log(`🐍 Could not find template [${templateId}] for document node [${instanceId}]`)
             continue
           }
-          const nodeWidth = getNodeWidth()
-          const nodeHeight = getNodeHeight(template)
 
-          node.dimensions = {
-            width: nodeWidth,
-            height: nodeHeight,
-          }
+          state.document.nodes[instanceId] = createInstance(template)
 
-          const inputInstanceIds = Object.keys(inputs)
-          const inputHeightSegments = divideDomain(
-            [0, nodeHeight - NODE_INTERNAL_PADDING * 2],
-            inputInstanceIds.length > 0 ? inputInstanceIds.length : 1
-          )
+          // const nodeWidth = getNodeWidth()
+          // const nodeHeight = getNodeHeight(template)
 
-          for (let i = 0; i < inputInstanceIds.length; i++) {
-            const currentId = inputInstanceIds[i]
-            const currentDomain = inputHeightSegments[i]
+          // node.dimensions = {
+          //   width: nodeWidth,
+          //   height: nodeHeight,
+          // }
 
-            const deltaX = 0
-            const deltaY = remap(0.5, [0, 1], currentDomain) + NODE_INTERNAL_PADDING
+          // const inputInstanceIds = Object.keys(inputs)
+          // const inputHeightSegments = divideDomain(
+          //   [0, nodeHeight - NODE_INTERNAL_PADDING * 2],
+          //   inputInstanceIds.length > 0 ? inputInstanceIds.length : 1
+          // )
 
-            node.anchors[currentId] = {
-              dx: deltaX,
-              dy: deltaY,
-            }
-          }
+          // for (let i = 0; i < inputInstanceIds.length; i++) {
+          //   const currentId = inputInstanceIds[i]
+          //   const currentDomain = inputHeightSegments[i]
 
-          const outputInstanceIds = Object.keys(outputs)
-          const outputHeightSegments = divideDomain(
-            [0, nodeHeight - NODE_INTERNAL_PADDING * 2],
-            outputInstanceIds.length > 0 ? outputInstanceIds.length : 1
-          )
+          //   const deltaX = 0
+          //   const deltaY = remap(0.5, [0, 1], currentDomain) + NODE_INTERNAL_PADDING
 
-          for (let i = 0; i < outputInstanceIds.length; i++) {
-            const currentId = outputInstanceIds[i]
-            const currentDomain = outputHeightSegments[i]
+          //   node.anchors[currentId] = {
+          //     dx: deltaX,
+          //     dy: deltaY,
+          //   }
+          // }
 
-            const deltaX = nodeWidth
-            const deltaY = remap(0.5, [0, 1], currentDomain) + NODE_INTERNAL_PADDING
+          // const outputInstanceIds = Object.keys(outputs)
+          // const outputHeightSegments = divideDomain(
+          //   [0, nodeHeight - NODE_INTERNAL_PADDING * 2],
+          //   outputInstanceIds.length > 0 ? outputInstanceIds.length : 1
+          // )
 
-            node.anchors[currentId] = {
-              dx: deltaX,
-              dy: deltaY,
-            }
-          }
+          // for (let i = 0; i < outputInstanceIds.length; i++) {
+          //   const currentId = outputInstanceIds[i]
+          //   const currentDomain = outputHeightSegments[i]
+
+          //   const deltaX = nodeWidth
+          //   const deltaY = remap(0.5, [0, 1], currentDomain) + NODE_INTERNAL_PADDING
+
+          //   node.anchors[currentId] = {
+          //     dx: deltaX,
+          //     dy: deltaY,
+          //   }
+          // }
         }
 
         expireSolution(state)
@@ -169,6 +189,88 @@ export const createDispatch = (set: BaseSetter, get: BaseGetter) => {
         },
         false,
         'selection/region/commit'
+      ),
+    commitLiveWireEdit: () =>
+      set(
+        (state) => {
+          const unsetLiveWireState = {
+            cursor: null,
+            target: null,
+            connections: {},
+            mode: null,
+          }
+
+          const { connections, target, mode } = state.registry.wires.live
+
+          if (!target) {
+            // No potential connection made, reset state to unset state
+            state.registry.wires.live = unsetLiveWireState
+            return
+          }
+
+          if (!mode) {
+            console.log('🐍 Tried to commit a live wire edit but no mode was specified!')
+          }
+
+          for (const connection of Object.values(connections)) {
+            const { portAnchor, portAnchorType } = connection
+
+            const [inputPort, outputPort] = portAnchorType === 'input' ? [portAnchor, target] : [target, portAnchor]
+
+            const currentSources = state.document.nodes[inputPort.nodeInstanceId]?.sources?.[inputPort.portInstanceId]
+
+            if (!currentSources) {
+              console.log('🐍 Tried to update node port sources that did not exist!')
+              continue
+            }
+
+            switch (mode) {
+              case 'set': {
+                // Set the given output port as the only source on the given input port
+                state.document.nodes[inputPort.nodeInstanceId].sources[inputPort.portInstanceId] = [outputPort]
+                break
+              }
+              case 'merge': {
+                // Add the given output port to any sources at the given input port
+                if (
+                  currentSources.some(
+                    (source) =>
+                      source.nodeInstanceId === outputPort.nodeInstanceId &&
+                      source.portInstanceId === outputPort.portInstanceId
+                  )
+                ) {
+                  // Source already exists
+                  break
+                }
+
+                state.document.nodes[inputPort.nodeInstanceId].sources[inputPort.portInstanceId].push(outputPort)
+                break
+              }
+              case 'remove': {
+                // Remove the given output port from the sources at the given input port
+                state.document.nodes[inputPort.nodeInstanceId].sources[inputPort.portInstanceId] =
+                  currentSources.filter(
+                    (source) =>
+                      source.nodeInstanceId !== outputPort.nodeInstanceId &&
+                      source.portInstanceId !== outputPort.portInstanceId
+                  )
+                break
+              }
+              case 'move': {
+                // TODO
+                break
+              }
+            }
+          }
+
+          // Connections changed, expire solution
+          expireSolution(state)
+
+          // All connections processed, reset state to unset state
+          state.registry.wires.live = unsetLiveWireState
+        },
+        false,
+        'wires/edit/commit'
       ),
     setCameraAspect: (aspect: number) =>
       set(

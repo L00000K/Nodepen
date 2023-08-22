@@ -6,10 +6,10 @@ import { MenuBody } from '../../common'
 import { clamp } from '@/utils/numerics'
 import { createInstance } from '@/utils/templates'
 import { useTextSearch } from './hooks'
-import { getNodeHeight, getNodeWidth } from '@/utils/node-dimensions'
 import { useOverlaySpaceToWorldSpace } from '@/hooks'
 import { AddNodeButton } from './components'
 import { KEYS } from '@/constants'
+import { expireSolution } from '@/store/utils'
 
 type AddNodeContextMenuProps = {
   position: ContextMenu['position']
@@ -30,7 +30,7 @@ export const AddNodeContextMenu = ({ position: eventPosition }: AddNodeContextMe
   const [searchQuery, setSearchQuery] = useState<string>()
   const [_isPending, startTransition] = useTransition()
 
-  const { exactMatch, candidates } = useTextSearch(templates, searchQuery ?? '', ['name', 'nickName', 'keywords'])
+  const candidates = useTextSearch(templates, searchQuery ?? '', ['name', 'nickName', 'keywords'], 'jw')
 
   const updateSearchQuery = useCallback(() => {
     const element = searchQueryInputRef.current
@@ -46,9 +46,7 @@ export const AddNodeContextMenu = ({ position: eventPosition }: AddNodeContextMe
 
   const debounceUpdateSearchQuery = useDebounceCallback(updateSearchQuery, 200)
 
-  const searchResults = exactMatch
-    ? [...candidates.slice(0, 3).reverse(), exactMatch]
-    : candidates.slice(0, 4).reverse()
+  const searchResults = candidates.slice(0, 4).reverse()
 
   useEffect(() => {
     const element = searchQueryInputRef.current
@@ -70,11 +68,17 @@ export const AddNodeContextMenu = ({ position: eventPosition }: AddNodeContextMe
     (e: React.KeyboardEvent<HTMLDivElement>): void => {
       switch (e.key) {
         case 'ArrowUp': {
+          e.preventDefault()
+
           setInternalSelection(clamp(internalSelection - 1, 0, 3))
+
           break
         }
         case 'ArrowDown': {
+          e.preventDefault()
+
           setInternalSelection(clamp(internalSelection + 1, 0, 3))
+
           break
         }
         case 'Enter': {
@@ -94,8 +98,8 @@ export const AddNodeContextMenu = ({ position: eventPosition }: AddNodeContextMe
   const handleAddNode = (template: NodePen.NodeTemplate): void => {
     const nodeInstance = createInstance(template)
 
-    const nodeWidth = getNodeWidth()
-    const nodeHeight = getNodeHeight(template)
+    const nodeWidth = nodeInstance.dimensions.width
+    const nodeHeight = nodeInstance.dimensions.height
 
     const [centerX, centerY] = overlaySpaceToWorldSpace(eventPosition.x, eventPosition.y)
 
@@ -113,6 +117,9 @@ export const AddNodeContextMenu = ({ position: eventPosition }: AddNodeContextMe
       // Clear menu from interface
       state.registry.contextMenus = {}
       state.registry.tooltips = {}
+
+      // Expire solution
+      expireSolution(state)
     })
   }
 

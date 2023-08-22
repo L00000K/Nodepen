@@ -1,6 +1,6 @@
 {
   "name": "@nodepen/core",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "core types and utils for nodepen",
   "author": "@cdriesler",
   "private": false,

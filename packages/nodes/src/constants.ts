@@ -18,7 +18,9 @@ export const COLORS = {
   DARKGREEN: '#093824',
   /* Special */
   ERROR: '#FF7171',
+  ERRORDARK: '#DD6363',
   WARN: '#FFBE71',
+  WARNDARK: '#E3AF71',
 } as const
 
 export const DIMENSIONS = {
@@ -28,9 +30,11 @@ export const DIMENSIONS = {
   NODE_MINIMUM_HEIGHT: 80,
   NODE_PORT_LABEL_FONT_SIZE: 18,
   NODE_PORT_LABEL_OFFSET: 12,
-  NODE_PORT_MINIMUM_HEIGHT: 40,
+  NODE_PORT_HEIGHT: 40,
   NODE_PORT_MINIMUM_WIDTH: 50,
   NODE_PORT_RADIUS: 5,
+  /** NODE_LABEL_WIDTH + 2 */
+  NODE_RUNTIME_MESSAGE_BUBBLE_SIZE: 34,
 } as const
 
 export const STYLES = {
@@ -51,6 +55,12 @@ export const STYLES = {
 export const KEYS = {
   TOOLTIPS: {
     ADD_NODE_MENU_OPTION_HOVER: 'add-node-menu',
+    PROGRESS_BAR_HOVER: 'progress-bar',
+    PROGRESS_BAR_VIEW_DOCUMENT: 'progress-bar-document-progress',
+    PROGRESS_BAR_VIEW_MODEL: 'progress-bar-model-progress',
     TEMPLATE_LIBRARY_CONTROL_OPTION_HOVER: 'template-library-control',
+  },
+  ELEMENT_IDS: {
+    WIRES_MASK_ID: 'np-wires-mask',
   },
 } as const

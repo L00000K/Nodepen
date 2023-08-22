@@ -2,13 +2,14 @@ import React from 'react'
 import { freeze } from 'immer'
 import type * as NodePen from '@nodepen/core'
 import type { ContextMenu, Tooltip } from '@/views/document-view/layers/transient-element-overlay/types'
+import type { NodePortReference, WireEditMode } from '@/types'
 
 export type NodesAppState = {
   document: NodePen.Document
   templates: {
     [templateId: string]: NodePen.NodeTemplate
   }
-  solution: NodePen.SolutionData
+  solution: NodePen.DocumentSolutionData
   camera: {
     /** container div innerWidth / innerHeight in screen space */
     aspect: number
@@ -41,6 +42,7 @@ export type NodesAppState = {
     contextMenus: {
       [menuKey: string]: ContextMenu
     }
+    dialogRoot: React.RefObject<HTMLDivElement>
     shadows: {
       containerRef: React.RefObject<HTMLDivElement> | null
       proxyRefs: {
@@ -85,16 +87,53 @@ export type NodesAppState = {
       }
     }
     wires: {
-      containerRef: React.RefObject<SVGGElement> | null
+      underlayContainerRef: React.RefObject<SVGGElement>
+      maskRef: React.RefObject<SVGMaskElement>
+      live: {
+        /** The current position of the cursor pointer in page space. */
+        cursor: {
+          pointerId: number
+          position: {
+            x: number
+            y: number
+          }
+        } | null
+        /** The live wire connections to draw. */
+        connections: {
+          [liveConnectionKey: string]: {
+            /** The port to connect one end of the wire to. */
+            portAnchor: NodePortReference
+            /** The end of the wire to connect to the given port. */
+            portAnchorType: 'output' | 'input'
+          }
+        }
+        /** The 'candidate' connection claimed on hover. Used for connection snapping. */
+        target: NodePortReference | null
+        mode: WireEditMode | null
+      }
+    }
+  }
+  lifecycle: {
+    solution: 'expired' | 'ready'
+    model: {
+      status: 'expired' | 'loading' | 'ready'
+      /** A value between 0 & 1 */
+      progress: number
+      objectCount: number
+    }
+  }
+  cache: {
+    portSolutionData: {
+      [cacheKey: string]: NodePen.PortSolutionData
     }
   }
   callbacks: NodesAppCallbacks
 }
 
 export type NodesAppCallbacks = {
-  onDocumentChange?: (state: NodesAppState) => void
   onExpireSolution?: (state: NodesAppState) => void
   onFileUpload?: (state: NodesAppState) => Promise<void> | void
+  getPortSolutionData?: (nodeInstanceId: string, portInstanceId: string) => Promise<NodePen.PortSolutionData | null>
 }
 
 export const initialState: NodesAppState = {
@@ -102,18 +141,18 @@ export const initialState: NodesAppState = {
     id: 'default-id',
     nodes: {},
     configuration: {
-      pinnedPorts: [],
+      inputs: [],
+      outputs: [],
     },
     version: 1,
   },
   templates: freeze({}),
   solution: freeze({
-    id: 'initial',
-    manifest: {
-      runtimeMessages: {},
-      streamObjectIds: [],
+    solutionId: 'initial',
+    documentRuntimeData: {
+      durationMs: 0,
     },
-    values: {},
+    nodeSolutionData: [],
   }),
   camera: {
     aspect: 1.5,
@@ -142,6 +181,7 @@ export const initialState: NodesAppState = {
   registry: {
     canvasRoot: React.createRef<HTMLDivElement>(),
     contextMenus: {},
+    dialogRoot: React.createRef<HTMLDivElement>(),
     shadows: {
       containerRef: null,
       proxyRefs: {
@@ -158,15 +198,26 @@ export const initialState: NodesAppState = {
     tooltips: {},
     views: {},
     wires: {
-      containerRef: null,
+      underlayContainerRef: React.createRef<SVGGElement>(),
+      maskRef: React.createRef<SVGMaskElement>(),
+      live: {
+        cursor: null,
+        target: null,
+        connections: {},
+        mode: null,
+      },
     },
   },
-  callbacks: {
-    onDocumentChange: () => {
-      console.log('From library!')
-    },
-    onExpireSolution: () => {
-      console.log('From library!')
+  lifecycle: {
+    solution: 'expired',
+    model: {
+      status: 'expired',
+      progress: 0,
+      objectCount: 0,
     },
   },
+  cache: {
+    portSolutionData: {},
+  },
+  callbacks: {},
 }

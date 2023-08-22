@@ -1,7 +1,13 @@
 import React from 'react'
 import { Layer } from '@/views/common'
 import { useDispatch, useStore } from '$'
-import { ActiveViewControl, PinnedPortsControl, TemplateLibraryControl } from './panels'
+import {
+  ActiveViewControl,
+  DocumentInfoControl,
+  PinnedInputsControl,
+  PinnedOutputsControl,
+  TemplateLibraryControl,
+} from './panels'
 
 const ControlsContainer = (): React.ReactElement => {
   const templates = useStore((state) => state.templates)
@@ -10,7 +16,8 @@ const ControlsContainer = (): React.ReactElement => {
     <ControlsContainerLayout>
       <ActiveViewControl />
       {/* <DocumentInfoControl /> */}
-      <PinnedPortsControl />
+      <PinnedInputsControl />
+      <PinnedOutputsControl />
       <TemplateLibraryControl templates={templates} />
     </ControlsContainerLayout>
   )

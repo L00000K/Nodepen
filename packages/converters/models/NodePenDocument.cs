@@ -2,11 +2,6 @@ using System;
 using System.Collections.Generic;
 using Speckle.Core.Models;
 using Speckle.Newtonsoft.Json;
-using Grasshopper.Kernel;
-using Grasshopper.Kernel.Types;
-using Grasshopper.Kernel.Data;
-using Grasshopper.Kernel.Parameters;
-using Objects.Geometry;
 
 namespace NodePen.Converters
 {
@@ -31,12 +26,15 @@ namespace NodePen.Converters
     public class NodePenDocumentConfiguration : Base
     {
 
-        [JsonProperty("pinnedPorts")]
-        public List<PinnedPortConfiguration> PinnedPorts { get; set; } = new List<PinnedPortConfiguration>();
+        [JsonProperty("inputs")]
+        public List<PortReference> Inputs { get; set; } = new List<PortReference>();
+
+        [JsonProperty("outputs")]
+        public List<PortReference> Outputs { get; set; } = new List<PortReference>();
 
     }
 
-    public class PinnedPortConfiguration : Base
+    public class PortReference : Base
     {
 
         [JsonProperty("nodeInstanceId")]
@@ -133,32 +131,6 @@ namespace NodePen.Converters
 
         [JsonProperty("portInstanceId")]
         public string PortInstanceId { get; set; }
-    }
-
-    public class NodePenDataTree : Dictionary<string, List<NodePenDataTreeValue>>
-    {
-
-    }
-
-    public class NodePenDataTreeValue : Base
-    {
-
-        [JsonProperty("type")]
-        public string Type { get; set; }
-
-        [JsonProperty("value")]
-        public dynamic Value { get; set; }
-
-        public double UnwrapAsDouble()
-        {
-            return Convert.ToDouble(this["Value"]);
-        }
-
-        public int UnwrapAsInteger()
-        {
-            return Convert.ToInt32(this["Value"]);
-        }
-
     }
 
 }

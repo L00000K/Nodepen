@@ -1,29 +1,9 @@
-import type * as GH from './geometry'
+import type { DataTreeValueType } from './DataTreeValueType'
 
-export type DataTreeValue =
-  | {
-      type: 'boolean'
-      value: boolean
-    }
-  | {
-      type: 'integer' | 'number'
-      value: number
-    }
-  | {
-      type: 'string'
-      value: string
-    }
-  | {
-      type: 'circle'
-      value: {
-        center: GH.Point
-        circumference: number
-        diameter: number
-        plane: GH.Plane
-        radius: number
-      }
-    }
-  | {
-      type: 'curve' | 'box' | 'surface'
-      value: string
-    }
+export type DataTreeValue = {
+  readonly type: DataTreeValueType
+  readonly description: string
+  readonly order: number
+  readonly value?: string
+  readonly geometry?: unknown
+}

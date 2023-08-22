@@ -24,11 +24,7 @@ const Page = ({ document }: PageProps): React.ReactElement => {
 
   return (
     <div className="w-vw h-vh flex justify-center items-center">
-      <div className="relative" style={{ width: 1000, height: 750, overflow: 'visible' }}>
-        <div className="absolute" style={{ width: 1000, height: 750, top: 0, left: 0, zIndex: 10 }}>
-          <NodesAppContainer document={document} templates={templates} />
-        </div>
-      </div>
+      <NodesAppContainer document={document} templates={templates} />
     </div>
   )
 }
@@ -85,16 +81,8 @@ export const getStaticProps: GetStaticProps<PageProps> = async () => {
         // },
       },
       configuration: {
-        pinnedPorts: [
-          // {
-          //   nodeInstanceId: 'test-element-id-a',
-          //   portInstanceId: 'input-b',
-          // },
-          // {
-          //   nodeInstanceId: 'test-element-id-a',
-          //   portInstanceId: 'input-c',
-          // },
-        ],
+        inputs: [],
+        outputs: [],
       },
       version: 1,
     }

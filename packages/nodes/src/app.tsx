@@ -6,11 +6,12 @@ import { useDispatch, useStore } from '$'
 import type { NodesAppCallbacks } from '$'
 import { ControlsContainer } from '@/components'
 import { FileUploadOverlayContainer, PseudoShadowsContainer } from './views/common'
+import { StaticDialogLayer } from './views/static/dialog-layer'
 
 type NodesAppProps = {
   document: NodePen.Document
   templates: NodePen.NodeTemplate[]
-  solution?: NodePen.SolutionData
+  solution?: NodePen.DocumentSolutionData
   children: React.ReactNode
 } & NodesAppCallbacks
 
@@ -43,9 +44,15 @@ export const NodesApp = ({
     }
 
     apply((state) => {
+      if (state.solution.solutionId !== solution.solutionId) {
+        return
+      }
+
       state.solution = freeze(solution)
+
+      state.lifecycle.solution = 'ready'
     })
-  }, [solution?.id, solution?.manifest.streamObjectIds])
+  }, [solution?.solutionId])
 
   return <NodesAppInternal children={children} />
 }
@@ -83,6 +90,7 @@ const NodesAppInternal = React.memo(({ children }: NodesAppInternalProps) => {
       <FileUploadOverlayContainer />
       <ControlsContainer />
       <PseudoShadowsContainer />
+      <StaticDialogLayer />
       {children}
     </div>
   )

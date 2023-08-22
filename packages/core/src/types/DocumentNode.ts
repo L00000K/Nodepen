@@ -1,4 +1,5 @@
 import type { DataTree } from './data'
+import type { PortConfiguration } from './ports'
 
 export type DocumentNode = {
   instanceId: string
@@ -27,6 +28,11 @@ export type DocumentNode = {
       dx: number
       dy: number
     }
+    /** The horizontal center of where the node label is drawn. */
+    labelDeltaX: {
+      dx: number
+      dy: 0
+    }
   }
   /** Data providers for inputs on this node. */
   sources: {
@@ -44,5 +50,8 @@ export type DocumentNode = {
   }
   outputs: {
     [outputInstanceId: string]: number
+  }
+  portConfigurations: {
+    [portInstanceId: string]: PortConfiguration
   }
 }
